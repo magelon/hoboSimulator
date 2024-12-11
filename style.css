@@ -1,0 +1,303 @@
+/* 基础样式 */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #2d2d2d;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+
+.game-container {
+    display: flex;
+    max-width: 1200px;
+    margin: 0 auto;
+    gap: 20px;
+}
+
+.status-panel {
+    flex: 1;
+    background: #3d3d3d;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+.main-area {
+    flex: 2;
+    background: #3d3d3d;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+.stats p {
+    margin: 10px 0;
+    padding: 5px;
+    background-color: #4d4d4d;
+    border-radius: 5px;
+    color: #e0e0e0;
+}
+
+.action-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover:not(:disabled) {
+    background-color: #45a049;
+}
+
+button:disabled {
+    background-color: #555555;
+    color: #888888;
+    cursor: not-allowed;
+}
+
+.event-log-container {
+    margin-top: 20px;
+    border-top: 2px solid #4d4d4d;
+}
+
+#event-log {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #4d4d4d;
+    border-radius: 5px;
+    max-height: 200px;
+    overflow-y: auto;
+    color: #e0e0e0;
+}
+
+#event-log p {
+    margin: 5px 0;
+    padding: 5px;
+    border-bottom: 1px solid #5d5d5d;
+}
+
+.inventory {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #4d4d4d;
+    border-radius: 5px;
+}
+
+.inventory-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    margin: 5px 0;
+    background-color: #3d3d3d;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    color: #e0e0e0;
+}
+
+.inventory-item button {
+    padding: 5px 10px;
+    font-size: 0.9em;
+}
+
+.inventory-capacity {
+    margin-top: 10px;
+    text-align: center;
+    color: #b0b0b0;
+    font-size: 0.9em;
+}
+
+.shop-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.7);
+    z-index: 1000;
+}
+
+.shop-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #3d3d3d;
+    padding: 20px;
+    border-radius: 10px;
+    min-width: 300px;
+    max-width: 80%;
+    max-height: 80vh;
+    overflow-y: auto;
+    color: #e0e0e0;
+}
+
+.shop-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #4d4d4d;
+}
+
+.location-info {
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #4d4d4d;
+    border-radius: 5px;
+}
+
+.status-effects {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #4d4d4d;
+    border-radius: 5px;
+}
+
+.effect-item {
+    padding: 5px;
+    margin: 5px 0;
+    background-color: #3d3d3d;
+    border-radius: 5px;
+    color: #e0e0e0;
+}
+
+.game-controls {
+    margin-top: 20px;
+    text-align: center;
+    padding: 10px;
+}
+
+/* 链接样式 */
+a {
+    color: #6dbd70;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #8edd91;
+}
+
+/* 选中文本样式 */
+::selection {
+    background-color: #4CAF50;
+    color: white;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #2d2d2d;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #4d4d4d;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #5d5d5d;
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
+    .game-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .status-panel, .main-area {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .action-group {
+        gap: 5px;
+    }
+
+    button {
+        padding: 12px 15px;
+        font-size: 16px;
+        width: calc(50% - 5px);
+        min-width: 120px;
+    }
+
+    .shop-content {
+        width: 90%;
+        max-height: 70vh;
+        padding: 15px;
+    }
+
+    .shop-item {
+        flex-direction: column;
+        gap: 10px;
+        padding: 15px;
+        background-color: #4d4d4d;
+    }
+
+    .shop-item button {
+        width: 100%;
+    }
+
+    .inventory-item {
+        padding: 12px;
+    }
+
+    .inventory-item button {
+        padding: 8px 15px;
+        width: auto;
+    }
+
+    #event-log {
+        max-height: 150px;
+        font-size: 14px;
+    }
+
+    .stats p {
+        font-size: 16px;
+        padding: 8px;
+    }
+}
+
+/* 触摸优化 */
+@media (hover: none) {
+    button, .inventory-item, .shop-item {
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+
+    .game-container {
+        touch-action: pan-y pinch-zoom;
+    }
+}
+
+/* 标题样式 */
+h1, h2, h3 {
+    color: #e0e0e0;
+    margin-top: 0;
+}
+
+/* 确保所有文本颜色一致 */
+* {
+    color-adjust: exact;
+    -webkit-font-smoothing: antialiased;
+} 

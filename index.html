@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>街友模拟器</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4CAF50">
+    <link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+    <div class="game-container">
+        <div class="status-panel">
+            <div class="stats">
+                <h2>个人状态</h2>
+                <p>第<span id="day">1</span>天</p>
+                <p>时间: <span id="period">上午</span></p>
+                <p>剩余行动次数: <span id="actions">2</span></p>
+                <p>金钱: <span id="money">0</span>元</p>
+                <p>饥饿度: <span id="hunger">100</span>%</p>
+                <p>清洁度: <span id="cleanliness">100</span>%</p>
+                <p>体温: <span id="temperature">36.5</span>°C</p>
+            </div>
+            <div class="inventory">
+                <h2>背包</h2>
+                <div id="inventory-items"></div>
+            </div>
+            <div class="status-effects">
+                <h2>状态效果</h2>
+                <div id="active-effects"></div>
+            </div>
+        </div>
+        
+        <div class="main-area">
+            <div class="location-info">
+                <h2>当前位置: <span id="current-location">街道</span></h2>
+                <p id="location-description"></p>
+            </div>
+            
+            <div class="actions">
+                <h3>移动</h3>
+                <div class="action-group">
+                    <button onclick="moveToLocation('street')">去街道</button>
+                    <button onclick="moveToLocation('park')">去公园</button>
+                    <button onclick="moveToLocation('restaurant')">去餐厅</button>
+                    <button onclick="moveToLocation('church')">去教堂</button>
+                    <button onclick="moveToLocation('store')">去商店</button>
+                </div>
+                
+                <h3>行动</h3>
+                <div class="action-group">
+                    <button onclick="beg()">乞讨</button>
+                    <button onclick="searchTrash()">翻垃圾桶</button>
+                    <button onclick="useWater()">使用水源</button>
+                    <button onclick="openShop()">购物</button>
+                    <button onclick="getChurchFood()">领取教堂食物</button>
+                </div>
+            </div>
+
+            <div class="shop-modal" id="shopModal">
+                <div class="shop-content">
+                    <h2>商店</h2>
+                    <div id="shop-items"></div>
+                    <button onclick="closeShop()">关闭</button>
+                </div>
+            </div>
+            
+            <div class="event-log-container">
+                <h3>事件记录</h3>
+                <div id="event-log"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加游戏控制按钮 -->
+    <div class="game-controls">
+        <button onclick="saveGame()">保存游戏</button>
+        <button onclick="loadGame()">加载游戏</button>
+        <button onclick="resetGame()">重新开始</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
