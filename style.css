@@ -15,12 +15,31 @@ body {
     gap: 20px;
 }
 
-.status-panel {
+.left-panel {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.status-panel {
     background: #3d3d3d;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+.effects-panel {
+    background: #3d3d3d;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    position: sticky;
+    top: 20px;
+}
+
+.effects-panel h2 {
+    margin-bottom: 15px;
 }
 
 .main-area {
@@ -154,9 +173,53 @@ button:disabled {
 
 .location-info {
     margin-bottom: 20px;
-    padding: 10px;
+    padding: 20px;
     background-color: #4d4d4d;
     border-radius: 5px;
+    min-height: 120px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    color: white;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.location-info::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 5px;
+    z-index: 1;
+}
+
+.location-info h2,
+.location-info p {
+    position: relative;
+    z-index: 2;
+}
+
+.location-street {
+    background-image: url('images/street.jpg');
+}
+
+.location-park {
+    background-image: url('images/park.jpg');
+}
+
+.location-restaurant {
+    background-image: url('images/restaurant.jpg');
+}
+
+.location-church {
+    background-image: url('images/church.jpg');
+}
+
+.location-store {
+    background-image: url('images/store.jpg');
 }
 
 .status-effects {
@@ -164,14 +227,38 @@ button:disabled {
     padding: 10px;
     background-color: #4d4d4d;
     border-radius: 5px;
+    position: sticky;
+    top: 10px;
 }
 
 .effect-item {
-    padding: 5px;
-    margin: 5px 0;
+    padding: 10px 15px;
+    margin: 8px 0;
+    border-radius: 8px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.effect-item.warning {
+    background-color: #ff4444;
+    color: white;
+    animation: blink 1s infinite;
+}
+
+.effect-item.buff {
     background-color: #3d3d3d;
-    border-radius: 5px;
+    color: #4CAF50;
+}
+
+.effect-item.info {
+    background-color: #3d3d3d;
     color: #e0e0e0;
+}
+
+@keyframes blink {
+    50% { opacity: 0.7; }
 }
 
 .game-controls {
@@ -223,6 +310,22 @@ a:hover {
     .game-container {
         flex-direction: column;
         gap: 10px;
+    }
+
+    .left-panel {
+        width: 100%;
+    }
+
+    .effects-panel {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        margin-top: -10px;
+        border-radius: 0 0 10px 10px;
+    }
+
+    .status-panel-content.collapsed + .effects-panel {
+        margin-top: -20px;
     }
 
     .status-panel, .main-area {
@@ -300,4 +403,46 @@ h1, h2, h3 {
 * {
     color-adjust: exact;
     -webkit-font-smoothing: antialiased;
+}
+
+.status-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.toggle-status-btn {
+    padding: 5px 10px;
+    font-size: 14px;
+    background-color: #3d3d3d;
+    border: 1px solid #4d4d4d;
+}
+
+.status-panel-content {
+    transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+    max-height: 800px;
+    opacity: 1;
+    overflow: hidden;
+}
+
+.status-panel-content.collapsed {
+    max-height: 0;
+    opacity: 0;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .status-panel {
+        position: relative;
+        z-index: 10;
+    }
+    
+    .status-panel-content.collapsed + .main-area {
+        margin-top: -20px;
+    }
 } 
+
+.inventory-item.warning span {
+    color: #ff4444;
+}

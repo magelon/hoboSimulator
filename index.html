@@ -11,22 +11,30 @@
 </head>
 <body>
     <div class="game-container">
-        <div class="status-panel">
-            <div class="stats">
-                <h2>个人状态</h2>
-                <p>第<span id="day">1</span>天</p>
-                <p>时间: <span id="period">上午</span></p>
-                <p>剩余行动次数: <span id="actions">2</span></p>
-                <p>金钱: <span id="money">0</span>元</p>
-                <p>饥饿度: <span id="hunger">100</span>%</p>
-                <p>清洁度: <span id="cleanliness">100</span>%</p>
-                <p>体温: <span id="temperature">36.5</span>°C</p>
+        <div class="left-panel">
+            <div class="status-panel">
+                <div class="status-panel-header">
+                    <h2>个人状态</h2>
+                    <button class="toggle-status-btn" onclick="toggleStatusPanel()">收起</button>
+                </div>
+                <div class="status-panel-content">
+                    <div class="stats">
+                        <p>第<span id="day">1</span>天</p>
+                        <p>时间: <span id="period">上午</span></p>
+                        <p>剩余行动次数: <span id="actions">2</span></p>
+                        <p>金钱: <span id="money">0</span>元</p>
+                        <p>饥饿度: <span id="hunger">100</span>%</p>
+                        <p>清洁度: <span id="cleanliness">100</span>%</p>
+                        <p>体温: <span id="temperature">36.5</span>°C</p>
+                    </div>
+                    <div class="inventory">
+                        <h2>背包</h2>
+                        <div id="inventory-items"></div>
+                    </div>
+                </div>
             </div>
-            <div class="inventory">
-                <h2>背包</h2>
-                <div id="inventory-items"></div>
-            </div>
-            <div class="status-effects">
+            
+            <div class="effects-panel">
                 <h2>状态效果</h2>
                 <div id="active-effects"></div>
             </div>
