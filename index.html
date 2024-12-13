@@ -52,7 +52,7 @@
                     <button onclick="moveToLocation('street')">去街道</button>
                     <button onclick="moveToLocation('park')">去公园</button>
                     <button onclick="moveToLocation('restaurant')">去餐厅</button>
-                    <button onclick="moveToLocation('church')">去��堂</button>
+                    <button onclick="moveToLocation('church')">去教堂</button>
                     <button onclick="moveToLocation('store')">去商店</button>
                     <button onclick="moveToLocation('cafe')">去咖啡店</button>
                 </div>
@@ -85,16 +85,15 @@
         </div>
     </div>
 
-    <!-- 添加游戏控制按钮 -->
+    <!-- 修改游戏控制按钮部分 -->
     <div class="game-controls">
         <button onclick="saveGame()">保存游戏</button>
         <button onclick="loadGame()">加载游戏</button>
         <button onclick="resetGame()">重新开始</button>
-        <button onclick="toggleCheatInput()" class="cheat-button">开发者</button>
     </div>
 
-    <!-- 添加隐藏的作弊输入框 -->
-    <div id="cheatInputModal" class="modal">
+    <!-- 保留作弊输入框但默认隐藏，以便保持键盘作弊功能 -->
+    <div id="cheatInputModal" class="modal" style="display: none;">
         <div class="modal-content">
             <h3>开发者模式</h3>
             <input type="text" id="cheatInput" placeholder="输入作弊码">

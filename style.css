@@ -538,3 +538,64 @@ h1, h2, h3 {
     justify-content: flex-end;
     margin-top: 15px;
 }
+
+/* 添加浮动数字动画 */
+.floating-number {
+    position: fixed;
+    color: #4CAF50;
+    font-weight: bold;
+    font-size: 20px;
+    pointer-events: none;
+    animation: floatUp 1.5s ease-out forwards;
+    text-shadow: 0 0 3px rgba(0,0,0,0.5);
+    z-index: 1000;
+}
+
+@keyframes floatUp {
+    0% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+}
+
+/* 添加金钱变化的闪光效果 */
+.money-flash {
+    animation: moneyFlash 0.5s ease-out;
+}
+
+@keyframes moneyFlash {
+    0% {
+        color: #4CAF50;
+        transform: scale(1.2);
+    }
+    100% {
+        color: inherit;
+        transform: scale(1);
+    }
+}
+
+/* 添加按钮点击效果 */
+button:active:not(:disabled) {
+    transform: scale(0.95);
+    transition: transform 0.1s;
+}
+
+/* 添加物品获得时的闪光效果 */
+.inventory-item.new-item {
+    animation: newItem 0.5s ease-out;
+}
+
+@keyframes newItem {
+    0% {
+        background-color: #4CAF50;
+        transform: scale(1.05);
+    }
+    100% {
+        background-color: #3d3d3d;
+        transform: scale(1);
+    }
+}

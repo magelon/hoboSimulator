@@ -264,11 +264,11 @@ function resetGame(isGameOver = false) {
         period: 'morning',
         actionsRemaining: 2,
         isWeekend: false,
-        hasDog: false,
-        hasRV: false,
-        activeEffects: [],
-        cafeDebt: 0,
-        rvStorage: {
+        hasDog: false,      // 确保重置狗
+        hasRV: false,       // 确保重置房车
+        activeEffects: [],  // 清空所有效果
+        cafeDebt: 0,        // 重置咖啡店欠债
+        rvStorage: {        // 重置房车储存
             food: 0,
             maxFood: 5
         }
@@ -296,6 +296,12 @@ function resetGame(isGameOver = false) {
     const eventLog = document.getElementById('event-log');
     eventLog.innerHTML = '';
     addEventLog('游戏重新开始了...');
+    
+    // 隐藏房车储存界面
+    const rvStorage = document.getElementById('rv-storage');
+    if (rvStorage) {
+        rvStorage.classList.remove('active');
+    }
 }
 
 // 自动保存
@@ -370,7 +376,6 @@ function addToInventory(itemId) {
         return true;
     }
     
-    // 为新物品初始化使用次数
     const newItem = {
         id: itemId,
         uses: 0
@@ -378,6 +383,16 @@ function addToInventory(itemId) {
     
     gameState.inventory.items.push(newItem);
     updateInventoryUI();
+    
+    // 添加新物品的闪光效果
+    const lastItem = document.querySelector('.inventory-item:last-child');
+    if (lastItem) {
+        lastItem.classList.add('new-item');
+        setTimeout(() => {
+            lastItem.classList.remove('new-item');
+        }, 500);
+    }
+    
     return true;
 }
 
@@ -573,7 +588,7 @@ function moveToLocation(location) {
             restaurant: '你来到了餐厅后巷，也许能在垃圾桶里找到食物。',
             church: () => gameState.isWeekend ? 
                 '教堂正在发放免费食物！' : 
-                '教堂没有发放食物，需要等到周末。',
+                '教堂没有发放食物，需要等���周末。',
             store: '你来到了商店，这里可以购买各种物品。',
             cafe: '你来到了咖啡店，这里可以购买咖啡和食物，还可以赊账。'
         };
@@ -622,15 +637,13 @@ function beg() {
         
         const chance = Math.random();
         if (chance < (0.3 + dogBonus + cleanlinessBonus * 0.2 - feverPenalty)) {
-            // 基础额
             const baseAmount = Math.floor(Math.random() * 10) + 1;
-            
-            // 计算各加成
             const dogAmount = gameState.hasDog ? Math.floor(baseAmount * 0.5) : 0;
-            const cleanlinessAmount = Math.floor(baseAmount * (cleanlinessBonus * 0.5)); // 清洁度100%时增加50%收益
+            const cleanlinessAmount = Math.floor(baseAmount * (cleanlinessBonus * 0.5));
             const totalAmount = baseAmount + dogAmount + cleanlinessAmount;
             
-            gameState.money += totalAmount;
+            // 使用新的金钱更新函数
+            updateMoney(totalAmount);
             
             // 显示详细的收益信息
             let message = `一位好心人给了你${totalAmount}元钱。`;
@@ -936,7 +949,7 @@ function buyCafeItem(itemId, useCredit) {
     const item = CAFE_ITEMS[itemId];
     
     if (useCredit && gameState.cafeDebt >= 50) {
-        addEventLog('你已经欠太多钱了，老板不肯再赊账了！');
+        addEventLog('你已经欠太多钱了���老板不肯再赊账了！');
         return;
     }
 
@@ -1022,7 +1035,7 @@ function storeFood() {
     // 检查背包中是否有食物
     const foodIndex = gameState.inventory.items.findIndex(item => item.id === 'food');
     if (foodIndex === -1) {
-        addEventLog('背包里没有食物可以存储');
+        addEventLog('背包里没有���物可以存储');
         return;
     }
 
@@ -1133,5 +1146,40 @@ document.addEventListener('keydown', function(event) {
         cheatCode = '';
     }, 5000);
 });
+
+// 添加浮动数字效果
+function showFloatingNumber(amount, x, y) {
+    const floatingNumber = document.createElement('div');
+    floatingNumber.className = 'floating-number';
+    floatingNumber.textContent = amount > 0 ? `+${amount}元` : `${amount}元`;
+    floatingNumber.style.left = `${x}px`;
+    floatingNumber.style.top = `${y}px`;
+    
+    document.body.appendChild(floatingNumber);
+    
+    // 动画结束后移除元素
+    setTimeout(() => {
+        document.body.removeChild(floatingNumber);
+    }, 1500);
+}
+
+// 修改金钱变化的显示
+function updateMoney(amount) {
+    const oldMoney = gameState.money;
+    gameState.money += amount;
+    
+    const moneyElement = document.getElementById('money');
+    moneyElement.textContent = gameState.money;
+    moneyElement.classList.add('money-flash');
+    
+    // 在点击位置显示浮动数字
+    const rect = moneyElement.getBoundingClientRect();
+    showFloatingNumber(amount, rect.right, rect.top);
+    
+    // 移除闪光效果
+    setTimeout(() => {
+        moneyElement.classList.remove('money-flash');
+    }, 500);
+}
 
 initGame();
