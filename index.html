@@ -14,28 +14,28 @@
         <div class="left-panel">
             <div class="status-panel">
                 <div class="status-panel-header">
-                    <h2>个人状态</h2>
+                    <h2 data-i18n="status">个人状态</h2>
                     <button class="toggle-status-btn" onclick="toggleStatusPanel()">收起</button>
                 </div>
                 <div class="status-panel-content">
                     <div class="stats">
                         <p>第<span id="day">1</span>天</p>
-                        <p>时间: <span id="period">上午</span></p>
-                        <p>剩余行动次数: <span id="actions">2</span></p>
-                        <p>金钱: <span id="money">0</span>元</p>
-                        <p>饥饿度: <span id="hunger">100</span>%</p>
-                        <p>清洁度: <span id="cleanliness">100</span>%</p>
-                        <p>体温: <span id="temperature">36.5</span>°C</p>
+                        <p><span data-i18n="period">时间</span>: <span id="period">上午</span></p>
+                        <p><span data-i18n="actions">剩余行动次数</span>: <span id="actions">2</span></p>
+                        <p><span data-i18n="money">金钱</span>: <span id="money">0</span>元</p>
+                        <p><span data-i18n="hunger">饥饿度</span>: <span id="hunger">100</span>%</p>
+                        <p><span data-i18n="cleanliness">清洁度</span>: <span id="cleanliness">100</span>%</p>
+                        <p><span data-i18n="temperature">体温</span>: <span id="temperature">36.5</span>°C</p>
                     </div>
                     <div class="inventory">
-                        <h2>背包</h2>
+                        <h2 data-i18n="inventory">背包</h2>
                         <div id="inventory-items"></div>
                     </div>
                 </div>
             </div>
             
             <div class="effects-panel">
-                <h2>状态效果</h2>
+                <h2 data-i18n="effects">状态效果</h2>
                 <div id="active-effects"></div>
             </div>
         </div>
@@ -49,22 +49,22 @@
             <div class="actions">
                 <h3>移动</h3>
                 <div class="action-group">
-                    <button onclick="moveToLocation('street')">去街道</button>
-                    <button onclick="moveToLocation('park')">去公园</button>
-                    <button onclick="moveToLocation('restaurant')">去餐厅</button>
-                    <button onclick="moveToLocation('church')">去教堂</button>
-                    <button onclick="moveToLocation('store')">去商店</button>
-                    <button onclick="moveToLocation('cafe')">去咖啡店</button>
+                    <button onclick="moveToLocation('street')" data-i18n="street">去街道</button>
+                    <button onclick="moveToLocation('park')" data-i18n="park">去公园</button>
+                    <button onclick="moveToLocation('restaurant')" data-i18n="restaurant">去餐厅</button>
+                    <button onclick="moveToLocation('church')" data-i18n="church">去教堂</button>
+                    <button onclick="moveToLocation('store')" data-i18n="store">去商店</button>
+                    <button onclick="moveToLocation('cafe')" data-i18n="cafe">去咖啡店</button>
                 </div>
                 
                 <h3>行动</h3>
                 <div class="action-group">
-                    <button onclick="beg()">乞讨</button>
-                    <button onclick="searchTrash()">翻垃圾桶</button>
-                    <button onclick="useWater()">使用水源</button>
-                    <button onclick="openShop()">购物</button>
-                    <button onclick="getChurchFood()">领取教堂食物</button>
-                    <button onclick="openCafe()">购买咖啡</button>
+                    <button onclick="beg()" data-i18n="beg">乞讨</button>
+                    <button onclick="searchTrash()" data-i18n="searchTrash">翻垃圾桶</button>
+                    <button onclick="useWater()" data-i18n="useWater">使用水源</button>
+                    <button onclick="openShop()" data-i18n="openShop">购物</button>
+                    <button onclick="getChurchFood()" data-i18n="getChurchFood">领取教堂食物</button>
+                    <button onclick="openCafe()" data-i18n="openCafe">购买咖啡</button>
                 </div>
             </div>
 
@@ -87,9 +87,16 @@
 
     <!-- 修改游戏控制按钮部分 -->
     <div class="game-controls">
-        <button onclick="saveGame()">保存游戏</button>
-        <button onclick="loadGame()">加载游戏</button>
-        <button onclick="resetGame()">重新开始</button>
+        <select id="languageSelect" onchange="changeLanguage(this.value)">
+            <option value="zh">简体中文</option>
+            <option value="en">English</option>
+            <option value="ja">日本語</option>
+            <option value="es">Español</option>
+            <option value="ko">한국어</option>
+        </select>
+        <button onclick="saveGame()" data-i18n="save">保存游戏</button>
+        <button onclick="loadGame()" data-i18n="load">加载游戏</button>
+        <button onclick="resetGame()" data-i18n="reset">重���开始</button>
     </div>
 
     <!-- 保留作弊输入框但默认隐藏，以便保持键盘作弊功能 -->
@@ -104,6 +111,9 @@
         </div>
     </div>
 
+    <!-- 先加载语言配置文件 -->
+    <script src="locales.js"></script>
+    <!-- 再加载主脚本 -->
     <script src="script.js"></script>
 </body>
 </html> 

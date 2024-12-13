@@ -187,9 +187,9 @@ function updateUI() {
     document.getElementById('hunger').textContent = Math.round(gameState.hunger);
     document.getElementById('cleanliness').textContent = Math.round(gameState.cleanliness);
     document.getElementById('temperature').textContent = gameState.temperature.toFixed(1);
-    document.getElementById('current-location').textContent = getLocationName(gameState.currentLocation);
-    document.getElementById('day').textContent = `${gameState.day} (${getWeekdayName(gameState.day)})`;
-    document.getElementById('period').textContent = gameState.period === 'morning' ? '上午' : '下午';
+    document.getElementById('current-location').textContent = t(gameState.currentLocation);
+    document.getElementById('day').textContent = t('day', gameState.day);
+    document.getElementById('period').textContent = t(gameState.period);
     document.getElementById('actions').textContent = gameState.actionsRemaining;
     
     updateInventoryUI();
@@ -517,7 +517,7 @@ function endDay() {
     
     // 体温过高时的饥饿加成也相应调整
     if (gameState.temperature >= 37.5) {
-        hungerLoss *= 1.5;  // 发烧时消耗更多能量，但基数降低了
+        hungerLoss *= 1.5;  // 发烧时消耗更多能量，但基数降低��
         gameState.cleanliness -= 10;
         addEventLog('发烧让你感到十分不适...');
     }
@@ -588,7 +588,7 @@ function moveToLocation(location) {
             restaurant: '你来到了餐厅后巷，也许能在垃圾桶里找到食物。',
             church: () => gameState.isWeekend ? 
                 '教堂正在发放免费食物！' : 
-                '教堂没有发放食物，需要等���周末。',
+                '教堂没有发放食物，需要等周末。',
             store: '你来到了商店，这里可以购买各种物品。',
             cafe: '你来到了咖啡店，这里可以购买咖啡和食物，还可以赊账。'
         };
@@ -609,7 +609,7 @@ function updateAvailableActions() {
         // 从 onclick 属性中提取动名称
         const actionName = button.getAttribute('onclick').split('(')[0];
         
-        // 检查当前位置是否允许该行动
+        // 检查当前位置是否允许该行��
         const isAvailable = locationActions[gameState.currentLocation]?.includes(actionName);
         
         // 设置按钮可见性
@@ -798,7 +798,7 @@ function buyItem(itemId) {
 function addEventLog(message) {
     const eventLog = document.getElementById('event-log');
     const event = document.createElement('p');
-    event.textContent = `[${gameState.period}] ${message}`;
+    event.textContent = `[${t(gameState.period)}] ${message}`;
     eventLog.prepend(event);
     
     while (eventLog.children.length > 50) {
@@ -807,15 +807,7 @@ function addEventLog(message) {
 }
 
 function getLocationName(location) {
-    const locations = {
-        street: '街道',
-        park: '公园',
-        restaurant: '餐厅',
-        church: '教堂',
-        store: '商店',
-        cafe: '咖啡店'  // 添加咖啡店名称
-    };
-    return locations[location];
+    return t(location);
 }
 
 // 移动端支持
@@ -949,7 +941,7 @@ function buyCafeItem(itemId, useCredit) {
     const item = CAFE_ITEMS[itemId];
     
     if (useCredit && gameState.cafeDebt >= 50) {
-        addEventLog('你已经欠太多钱了���老板不肯再赊账了！');
+        addEventLog('你已经欠太多钱了老板不肯再赊账了！');
         return;
     }
 
@@ -974,7 +966,7 @@ function buyCafeItem(itemId, useCredit) {
         if (item.storable) {
             // 将食物添加到背包
             const newItem = {
-                id: 'cafeFood',  // 修改这里使用正确的ID
+                id: 'cafeFood',  // 修���这里使用正确的ID
                 uses: 0,         // 添加使用次数属性
                 name: item.name  // 保存物品名称
             };
@@ -1035,7 +1027,7 @@ function storeFood() {
     // 检查背包中是否有食物
     const foodIndex = gameState.inventory.items.findIndex(item => item.id === 'food');
     if (foodIndex === -1) {
-        addEventLog('背包里没有���物可以存储');
+        addEventLog('背包里没有食物可以存储');
         return;
     }
 
@@ -1107,7 +1099,7 @@ function closeCheatInput() {
 function submitCheat() {
     const cheatInput = document.getElementById('cheatInput').value.toLowerCase();
     
-    // 检查作弊码
+    // 检���作弊码
     if (cheatInput === 'money') {
         gameState.money += 2000;
         addEventLog('【开发者模式】获得2000元');
@@ -1180,6 +1172,56 @@ function updateMoney(amount) {
     setTimeout(() => {
         moneyElement.classList.remove('money-flash');
     }, 500);
+}
+
+// 当前语言
+let currentLocale = 'zh';
+
+// 语言切换函数
+function changeLanguage(locale) {
+    currentLocale = locale;
+    localStorage.setItem('gameLanguage', locale);
+    updateAllText();
+}
+
+// 获取翻译文本
+function t(key, ...args) {
+    let text = LOCALES[currentLocale]?.strings[key] || LOCALES['zh'].strings[key];
+    if (args.length > 0) {
+        text = text.replace(/%[sd]/g, () => args.shift());
+    }
+    return text;
+}
+
+// 更新所有文本
+function updateAllText() {
+    // 更新所有带有 data-i18n 属性的元素
+    document.querySelectorAll('[data-i18n]').forEach(element => {
+        const key = element.getAttribute('data-i18n');
+        element.textContent = t(key);
+    });
+
+    // 更新状态面板
+    document.querySelector('.status-panel h2').textContent = t('status');
+    document.querySelector('.inventory h2').textContent = t('inventory');
+    document.querySelector('.effects-panel h2').textContent = t('effects');
+
+    // 更新按钮文本
+    updateButtonText();
+
+    // 更新当前显示的信息
+    updateUI();
+}
+
+// 在游戏初始化时加载保存的语言设置
+function initGame() {
+    const savedLanguage = localStorage.getItem('gameLanguage');
+    if (savedLanguage) {
+        currentLocale = savedLanguage;
+        document.getElementById('languageSelect').value = savedLanguage;
+    }
+    updateAllText();
+    // ... 其他初始化代码
 }
 
 initGame();
