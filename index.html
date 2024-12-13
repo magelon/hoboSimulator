@@ -52,8 +52,9 @@
                     <button onclick="moveToLocation('street')">去街道</button>
                     <button onclick="moveToLocation('park')">去公园</button>
                     <button onclick="moveToLocation('restaurant')">去餐厅</button>
-                    <button onclick="moveToLocation('church')">去教堂</button>
+                    <button onclick="moveToLocation('church')">去��堂</button>
                     <button onclick="moveToLocation('store')">去商店</button>
+                    <button onclick="moveToLocation('cafe')">去咖啡店</button>
                 </div>
                 
                 <h3>行动</h3>
@@ -63,6 +64,7 @@
                     <button onclick="useWater()">使用水源</button>
                     <button onclick="openShop()">购物</button>
                     <button onclick="getChurchFood()">领取教堂食物</button>
+                    <button onclick="openCafe()">购买咖啡</button>
                 </div>
             </div>
 
@@ -73,6 +75,8 @@
                     <button onclick="closeShop()">关闭</button>
                 </div>
             </div>
+            
+            <div id="rv-storage" class="rv-storage"></div>
             
             <div class="event-log-container">
                 <h3>事件记录</h3>
@@ -86,6 +90,19 @@
         <button onclick="saveGame()">保存游戏</button>
         <button onclick="loadGame()">加载游戏</button>
         <button onclick="resetGame()">重新开始</button>
+        <button onclick="toggleCheatInput()" class="cheat-button">开发者</button>
+    </div>
+
+    <!-- 添加隐藏的作弊输入框 -->
+    <div id="cheatInputModal" class="modal">
+        <div class="modal-content">
+            <h3>开发者模式</h3>
+            <input type="text" id="cheatInput" placeholder="输入作弊码">
+            <div class="button-group">
+                <button onclick="submitCheat()">确定</button>
+                <button onclick="closeCheatInput()">关闭</button>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>

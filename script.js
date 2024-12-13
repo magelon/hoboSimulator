@@ -16,7 +16,12 @@ const gameState = {
     isWeekend: false,
     hasDog: false,
     hasRV: false,
-    activeEffects: []
+    activeEffects: [],
+    cafeDebt: 0,
+    rvStorage: {
+        food: 0,
+        maxFood: 5  // 最多存储5份食物
+    }
 };
 
 // 物品定义
@@ -24,10 +29,10 @@ const ITEMS = {
     food: { 
         name: '食物', 
         price: 10, 
-        description: '可以恢复20点饥饿度（一次性）', 
+        description: '可以恢复30点饥饿度（一次性）', 
         storable: true,
         use: (state, item) => {
-            state.hunger += 20;
+            state.hunger += 30;
             if(state.hunger > 100) state.hunger = 100;
             return {
                 message: '你吃了一份食物，感觉好多了。',
@@ -82,13 +87,16 @@ const ITEMS = {
             addEffect('温暖', 3);
             
             const remainingUses = item.maxUses - item.uses;
-            if (item.uses >= item.maxUses) {
+            
+            // 当剩余使用次数小于等于0时，移除毯子
+            if (remainingUses <= 0) {
                 return {
                     message: '毯子已经破旧不堪，无法继续使用了。',
                     remove: true,
                     updateUI: true
                 };
             }
+            
             return {
                 message: `你用毯子裹住身体，感觉暖和了一些。（剩余使用次数：${remainingUses}次）`,
                 remove: false,
@@ -109,11 +117,42 @@ const ITEMS = {
     rv: { 
         name: '房车', 
         price: 2000, 
-        description: '移动的家，大幅提高生存能力', 
+        description: '移动的家，可存储和烹饪食物，降低饥饿和体温损失', 
         storable: false,
         effect: () => { 
             gameState.hasRV = true; 
             addEffect('房车庇护', -1);
+            addEventLog('现在你可以在房车中存储和烹饪食物了！');
+        }
+    }
+};
+
+// 添加咖啡店物品
+const CAFE_ITEMS = {
+    coffee: {
+        name: '咖啡',
+        price: 5,
+        description: '提神醒脑，增加行动力',
+        credit: true,  // 可以赊账
+        storable: false,  // 咖啡直接饮用
+        effect: (state) => {
+            state.actionsRemaining += 1;
+            return '喝了一杯咖啡，感觉精神了一些（获得1点行动力）';
+        }
+    },
+    cafeFood: {
+        name: '简餐',
+        price: 10,
+        description: '咖啡店的简单食物',
+        credit: true,  // 可以赊账
+        storable: true,  // 食物可以存入背包
+        use: (state) => {
+            state.hunger += 40;
+            if(state.hunger > 100) state.hunger = 100;
+            return {
+                message: '吃了一份简餐，感觉饱多了。',
+                remove: true
+            };
         }
     }
 };
@@ -124,7 +163,8 @@ const locationActions = {
     park: ['useWater', 'searchTrash'],
     restaurant: ['searchTrash'],
     church: ['getChurchFood', 'searchTrash'],
-    store: ['openShop', 'searchTrash']
+    store: ['openShop', 'searchTrash'],
+    cafe: ['openCafe', 'searchTrash']  // 移除乞讨，只保留咖啡店功能和翻垃圾桶
 };
 
 // 游戏初始化和UI更新
@@ -148,13 +188,14 @@ function updateUI() {
     document.getElementById('cleanliness').textContent = Math.round(gameState.cleanliness);
     document.getElementById('temperature').textContent = gameState.temperature.toFixed(1);
     document.getElementById('current-location').textContent = getLocationName(gameState.currentLocation);
-    document.getElementById('day').textContent = gameState.day;
+    document.getElementById('day').textContent = `${gameState.day} (${getWeekdayName(gameState.day)})`;
     document.getElementById('period').textContent = gameState.period === 'morning' ? '上午' : '下午';
     document.getElementById('actions').textContent = gameState.actionsRemaining;
     
     updateInventoryUI();
     updateEffectsUI();
     updateAvailableActions();
+    updateRVStorageUI();
     
     // 更新按钮状态
     const buttons = document.querySelectorAll('button:not([style*="display: none"])');
@@ -188,17 +229,73 @@ function loadGame() {
             loadedState.inventory.emptyBottles = 0;
         }
         
+        // 确保 rvStorage 结构完整
+        if (!loadedState.rvStorage) {
+            loadedState.rvStorage = {
+                food: 0,
+                maxFood: 5
+            };
+        }
+        
         Object.assign(gameState, loadedState);
         updateUI();
         addEventLog('游戏已加载');
     }
 }
 
-function resetGame() {
-    if (confirm('确定要重新开始游戏吗？当前进度将丢失')) {
-        localStorage.removeItem('streetLifeGameState');
-        location.reload();
+function resetGame(isGameOver = false) {
+    if (!isGameOver && !confirm('确定要重新开始游戏吗？当前进度将丢失')) {
+        return;
     }
+
+    // 重置所有游戏数据到初始状态
+    Object.assign(gameState, {
+        money: 0,
+        hunger: 100,
+        cleanliness: 100,
+        temperature: 36.5,
+        inventory: {
+            emptyBottles: 0,
+            items: []
+        },
+        maxInventory: 5,
+        currentLocation: 'street',
+        day: 1,
+        period: 'morning',
+        actionsRemaining: 2,
+        isWeekend: false,
+        hasDog: false,
+        hasRV: false,
+        activeEffects: [],
+        cafeDebt: 0,
+        rvStorage: {
+            food: 0,
+            maxFood: 5
+        }
+    });
+
+    // 清除本地存储
+    localStorage.removeItem('streetLifeGameState');
+    localStorage.removeItem('statusPanelCollapsed');
+
+    // 更新界面
+    updateUI();
+    
+    // 重置位置背景
+    const locationInfo = document.querySelector('.location-info');
+    locationInfo.className = 'location-info';
+    locationInfo.classList.add('location-street');
+
+    // 重置状态面板
+    const content = document.querySelector('.status-panel-content');
+    const button = document.querySelector('.toggle-status-btn');
+    content.classList.remove('collapsed');
+    button.textContent = '收起';
+
+    // 清空事件日志
+    const eventLog = document.getElementById('event-log');
+    eventLog.innerHTML = '';
+    addEventLog('游戏重新开始了...');
 }
 
 // 自动保存
@@ -219,18 +316,29 @@ function updateInventoryUI() {
         inventoryDiv.appendChild(bottleElement);
     }
     
+    // 检查并移除耐久为0的毯子
+    gameState.inventory.items = gameState.inventory.items.filter((item, index) => {
+        if (item.id === 'blanket') {
+            const itemData = ITEMS[item.id];
+            const remainingUses = itemData.maxUses - (item.uses || 0);
+            if (remainingUses <= 0) {
+                addEventLog('一条破旧的毯子从你的背包中掉了出来...');
+                return false;
+            }
+        }
+        return true;
+    });
+    
     // 显示其他物品
     gameState.inventory.items.forEach((item, index) => {
-        const itemData = ITEMS[item.id];
+        const itemData = item.id === 'cafeFood' ? CAFE_ITEMS.cafeFood : ITEMS[item.id];
         const itemElement = document.createElement('div');
         itemElement.className = 'inventory-item';
         
-        // 如果是毯子，显示剩余使用次数
         let itemName = itemData.name;
         if (item.id === 'blanket') {
             const remainingUses = itemData.maxUses - (item.uses || 0);
             itemName += ` (剩余${remainingUses}次)`;
-            // 如果剩余次数较少，添加视觉提醒
             if (remainingUses <= 3) {
                 itemElement.classList.add('warning');
             }
@@ -280,18 +388,16 @@ function removeFromInventory(index) {
 
 function useItem(index) {
     const item = gameState.inventory.items[index];
-    const itemData = ITEMS[item.id];
+    const itemData = item.id === 'cafeFood' ? CAFE_ITEMS.cafeFood : ITEMS[item.id];
     
     if (!itemData) return;
     
     const result = itemData.use(gameState, item);
     addEventLog(result.message);
     
-    // 如果物品需要���除（一次性物品或已用尽的毯子）
     if (result.remove) {
         removeFromInventory(index);
     } else if (result.updateUI) {
-        // 如果需要更新UI（比如毯子使用次数变化）
         updateInventoryUI();
     }
     
@@ -303,10 +409,10 @@ function updateEffectsUI() {
     const effectsDiv = document.getElementById('active-effects');
     effectsDiv.innerHTML = '';
     
-    // 添加天数提醒
+    // 添加天数和星期提醒
     const dayEffect = document.createElement('div');
-    dayEffect.className = 'effect-item';
-    dayEffect.textContent = `第${gameState.day}天 ${gameState.period === 'morning' ? '上午' : '下午'}`;
+    dayEffect.className = 'effect-item info';
+    dayEffect.textContent = `📅 第${gameState.day}天 ${getWeekdayName(gameState.day)} ${gameState.period === 'morning' ? '上午' : '下午'}`;
     effectsDiv.appendChild(dayEffect);
     
     // 添加重要状态提醒
@@ -360,10 +466,10 @@ function updateEffectsUI() {
     });
 }
 
-// 行动点数���统
+// 行动点数系统
 function consumeAction(callback) {
     if (gameState.actionsRemaining <= 0) {
-        addEventLog('今天的行动次数已用完！');
+        addEventLog('今的行动次数已用完！');
         return;
     }
 
@@ -390,14 +496,14 @@ function endDay() {
     gameState.actionsRemaining = 2;
     gameState.isWeekend = (gameState.day % 7 === 6 || gameState.day % 7 === 0);
     
-    // 状态衰减
-    let hungerLoss = gameState.hasRV ? 10 : 20;
+    // 降低饥饿值衰减速度（从原来的20/10改为10/5）
+    let hungerLoss = gameState.hasRV ? 5 : 10;  // 有房车时只降低5点，否则降低10点
     let tempLoss = gameState.hasRV ? 0.1 : 0.2;
     
-    // 体温过高会加快饥饿和清洁度的损失
+    // 体温过高时的饥饿加成也相应调整
     if (gameState.temperature >= 37.5) {
-        hungerLoss *= 1.5;  // 发烧时消耗更多能量
-        gameState.cleanliness -= 10;  // 额外流汗导致更不清洁
+        hungerLoss *= 1.5;  // 发烧时消耗更多能量，但基数降低了
+        gameState.cleanliness -= 10;
         addEventLog('发烧让你感到十分不适...');
     }
     
@@ -408,7 +514,7 @@ function endDay() {
     // 限制最小值和最大值
     gameState.hunger = Math.max(0, gameState.hunger);
     gameState.cleanliness = Math.max(0, gameState.cleanliness);
-    gameState.temperature = Math.max(35, Math.min(42, gameState.temperature));  // 添加最高温度限制
+    gameState.temperature = Math.max(35, Math.min(42, gameState.temperature));
     
     // 体温过高可能导致死亡
     if (gameState.temperature >= 42) {
@@ -442,7 +548,7 @@ function checkGameOver() {
 
 function gameOver(reason) {
     alert(`游戏结束: ${reason}\n你存活了${gameState.day}天`);
-    resetGame();
+    resetGame(true);  // 添加参数表示是死亡重置
 }
 
 // 位置系统
@@ -452,8 +558,8 @@ function moveToLocation(location) {
         
         // 更新位置显示和背景
         const locationInfo = document.querySelector('.location-info');
-        locationInfo.className = 'location-info'; // 清除现有类
-        locationInfo.classList.add(`location-${location}`); // 添加新位置的类
+        locationInfo.className = 'location-info';
+        locationInfo.classList.add(`location-${location}`);
         
         document.getElementById('current-location').textContent = getLocationName(location);
         
@@ -464,11 +570,12 @@ function moveToLocation(location) {
         const locationMessages = {
             street: '你来到了街道，可以向路人乞讨。',
             park: '你来到了公园，这里有免费的水可以使用。',
-            restaurant: '你来到了餐厅后巷，也许能在圾桶里找到食物。',
+            restaurant: '你来到了餐厅后巷，也许能在垃圾桶里找到食物。',
             church: () => gameState.isWeekend ? 
                 '教堂正在发放免费食物！' : 
-                '教堂在没有发放食物，需要等到周末。',
-            store: '你来到了商店，这里可以购买各种物品。'
+                '教堂没有发放食物，需要等到周末。',
+            store: '你来到了商店，这里可以购买各种物品。',
+            cafe: '你来到了咖啡店，这里可以购买咖啡和食物，还可以赊账。'
         };
         
         const message = typeof locationMessages[location] === 'function' 
@@ -484,7 +591,7 @@ function updateAvailableActions() {
     const actionButtons = document.querySelectorAll('.actions .action-group:last-child button');
     
     actionButtons.forEach(button => {
-        // 从 onclick 属性中提取行动名称
+        // 从 onclick 属性中提取动名称
         const actionName = button.getAttribute('onclick').split('(')[0];
         
         // 检查当前位置是否允许该行动
@@ -518,7 +625,7 @@ function beg() {
             // 基础额
             const baseAmount = Math.floor(Math.random() * 10) + 1;
             
-            // 计算各种加成
+            // 计算各加成
             const dogAmount = gameState.hasDog ? Math.floor(baseAmount * 0.5) : 0;
             const cleanlinessAmount = Math.floor(baseAmount * (cleanlinessBonus * 0.5)); // 清洁度100%时增加50%收益
             const totalAmount = baseAmount + dogAmount + cleanlinessAmount;
@@ -567,7 +674,7 @@ function searchTrash() {
         } else if (gameState.currentLocation === 'restaurant' && chance < 0.5) { // 餐厅特殊奖励
             gameState.hunger += 15;
             if (gameState.hunger > 100) gameState.hunger = 100;
-            addEventLog('你在餐厅垃圾桶里找到了一些剩菜！');
+            addEventLog('你在餐厅垃圾桶找到了一些剩菜！');
             gameState.cleanliness -= 5;
         } else {
             addEventLog("翻了翻垃圾桶，什么都没找到。");
@@ -604,7 +711,7 @@ function getChurchFood() {
     }
 
     consumeAction(() => {
-        gameState.hunger += 50;
+        gameState.hunger += 60;
         if (gameState.hunger > 100) gameState.hunger = 100;
         addEventLog('你领取了教堂发放的食物，感觉饱多了。');
     });
@@ -663,7 +770,7 @@ function buyItem(itemId) {
             
             if (item.storable) {
                 addToInventory(itemId);
-                addEventLog(`你购买了${item.name}并放入背包`);
+                addEventLog(`你购买了${item.name}并加入背包`);
             } else {
                 item.effect();
                 addEventLog(`你购买了${item.name}`);
@@ -692,7 +799,8 @@ function getLocationName(location) {
         park: '公园',
         restaurant: '餐厅',
         church: '教堂',
-        store: '商店'
+        store: '商店',
+        cafe: '咖啡店'  // 添加咖啡店名称
     };
     return locations[location];
 }
@@ -734,7 +842,7 @@ function sellBottles() {
     if (gameState.inventory.emptyBottles > 0) {
         const earnings = gameState.inventory.emptyBottles * 1;
         gameState.money += earnings;
-        addEventLog(`卖出了 ${gameState.inventory.emptyBottles} 个空瓶，赚到 ${earnings} 元`);
+        addEventLog(`卖出了 ${gameState.inventory.emptyBottles} 个空瓶赚到 ${earnings} 元`);
         gameState.inventory.emptyBottles = 0;
         updateUI();
         closeShop();
@@ -750,7 +858,7 @@ function toggleStatusPanel() {
     const button = document.querySelector('.toggle-status-btn');
     const isCollapsed = content.classList.toggle('collapsed');
     
-    // 更新按钮文字
+    // 更新钮文字
     button.textContent = isCollapsed ? '展开' : '收起';
     
     // 保存状态到本地存储
@@ -774,7 +882,7 @@ function addEffect(name, duration) {
     // 如果已经存在相同效果，先移除它
     gameState.activeEffects = gameState.activeEffects.filter(effect => effect.name !== name);
     
-    // 添加新效果
+    // 添加效果
     gameState.activeEffects.push({
         name: name,
         duration: duration,  // -1 表示永久效果
@@ -783,5 +891,247 @@ function addEffect(name, duration) {
     
     updateEffectsUI();
 }
+
+// 修改咖啡店功能
+function openCafe() {
+    if (gameState.currentLocation !== 'cafe') {
+        addEventLog('你需要在咖啡店才能购买！');
+        return;
+    }
+
+    const shopModal = document.getElementById('shopModal');
+    const shopItems = document.getElementById('shop-items');
+    shopItems.innerHTML = '';
+
+    // 显示当前欠债
+    if (gameState.cafeDebt > 0) {
+        const debtDiv = document.createElement('div');
+        debtDiv.className = 'shop-item warning';
+        debtDiv.innerHTML = `
+            <span>当前欠债: ${gameState.cafeDebt}元</span>
+            <button onclick="payCafeDebt()" ${gameState.money >= gameState.cafeDebt ? '' : 'disabled'}>还清欠债</button>
+        `;
+        shopItems.appendChild(debtDiv);
+    }
+
+    // 显示咖啡店商品
+    Object.entries(CAFE_ITEMS).forEach(([id, item]) => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'shop-item';
+        itemDiv.innerHTML = `
+            <span>${item.name} - ${item.price}元 (${item.description})</span>
+            <div class="button-group">
+                <button onclick="buyCafeItem('${id}', false)" ${gameState.money >= item.price ? '' : 'disabled'}>购买</button>
+                ${item.credit ? `<button onclick="buyCafeItem('${id}', true)" ${gameState.cafeDebt >= 50 ? 'disabled' : ''}>赊账</button>` : ''}
+            </div>
+        `;
+        shopItems.appendChild(itemDiv);
+    });
+
+    shopModal.style.display = 'block';
+}
+
+// 修改购买咖啡店物品函数
+function buyCafeItem(itemId, useCredit) {
+    const item = CAFE_ITEMS[itemId];
+    
+    if (useCredit && gameState.cafeDebt >= 50) {
+        addEventLog('你已经欠太多钱了，老板不肯再赊账了！');
+        return;
+    }
+
+    if (!useCredit && gameState.money < item.price) {
+        addEventLog('你的钱不够！');
+        return;
+    }
+
+    // 如果是可存储物品，检查背包空间
+    if (item.storable && gameState.inventory.items.length >= gameState.maxInventory) {
+        addEventLog('背包已满，无法购买！');
+        return;
+    }
+
+    consumeAction(() => {
+        if (useCredit) {
+            gameState.cafeDebt += item.price;
+        } else {
+            gameState.money -= item.price;
+        }
+
+        if (item.storable) {
+            // 将食物添加到背包
+            const newItem = {
+                id: 'cafeFood',  // 修改这里使用正确的ID
+                uses: 0,         // 添加使用次数属性
+                name: item.name  // 保存物品名称
+            };
+            gameState.inventory.items.push(newItem);
+            addEventLog(useCredit ? `赊账买了${item.name}并放入背包。` : `购买了${item.name}并放入背包。`);
+        } else {
+            // 直接使用物品（比如咖啡）
+            const message = item.effect(gameState);
+            addEventLog(useCredit ? `赊账买了${item.name}。${message}` : `购买了${item.name}。${message}`);
+        }
+
+        if (useCredit) {
+            addEventLog(`当前欠债: ${gameState.cafeDebt}元`);
+        }
+        
+        closeShop();
+        updateUI();
+    });
+}
+
+// 还清咖啡店欠债
+function payCafeDebt() {
+    if (gameState.money >= gameState.cafeDebt) {
+        gameState.money -= gameState.cafeDebt;
+        addEventLog(`还清了${gameState.cafeDebt}元欠债`);
+        gameState.cafeDebt = 0;
+        closeShop();
+        updateUI();
+    }
+}
+
+// 添加获取星期几的函数
+function getWeekdayName(day) {
+    const weekday = day % 7;  // 获取余数来确定星期几
+    switch(weekday) {
+        case 0: return '星期日';
+        case 1: return '星期一';
+        case 2: return '星期二';
+        case 3: return '星期三';
+        case 4: return '星期四';
+        case 5: return '星期五';
+        case 6: return '星期六';
+    }
+}
+
+// 修改房车食物存储功能
+function storeFood() {
+    if (!gameState.hasRV) {
+        addEventLog('你需要一辆房车才能存储食物！');
+        return;
+    }
+
+    if (gameState.rvStorage.food >= gameState.rvStorage.maxFood) {
+        addEventLog('房车的食物储存空间已满！');
+        return;
+    }
+
+    // 检查背包中是否有食物
+    const foodIndex = gameState.inventory.items.findIndex(item => item.id === 'food');
+    if (foodIndex === -1) {
+        addEventLog('背包里没有食物可以存储');
+        return;
+    }
+
+    // 将食物从背包移到房车储存
+    removeFromInventory(foodIndex);
+    gameState.rvStorage.food++;
+    addEventLog('你将一份食物存放在房车中');
+    updateRVStorageUI();
+    updateUI();
+}
+
+function cookFood() {
+    if (!gameState.hasRV) {
+        addEventLog('你需要一辆房车才能烹饪食物！');
+        return;
+    }
+
+    if (gameState.rvStorage.food <= 0) {
+        addEventLog('房车中没有储存的食物！');
+        return;
+    }
+
+    consumeAction(() => {
+        gameState.rvStorage.food--;
+        gameState.hunger += 40;  // 烹饪后的食物效果更好
+        if (gameState.hunger > 100) gameState.hunger = 100;
+        addEventLog('你在房车中烹饪了一份食物，感觉特别美味！');
+        updateRVStorageUI();
+        updateUI();
+    });
+}
+
+// 修改房车储存UI显示
+function updateRVStorageUI() {
+    if (!gameState.hasRV) return;
+
+    const rvStorageDiv = document.getElementById('rv-storage');
+    if (!rvStorageDiv) return;
+
+    // 检查背包中是否有食物
+    const hasFoodInInventory = gameState.inventory.items.some(item => item.id === 'food');
+
+    rvStorageDiv.innerHTML = `
+        <h3>房车储存</h3>
+        <div class="rv-storage-info">
+            <p>储存食物: ${gameState.rvStorage.food}/${gameState.rvStorage.maxFood}</p>
+            <div class="button-group">
+                <button onclick="storeFood()" ${!hasFoodInInventory ? 'disabled' : ''}>存储食物</button>
+                <button onclick="cookFood()" ${gameState.rvStorage.food <= 0 ? 'disabled' : ''}>烹饪食物</button>
+            </div>
+        </div>
+    `;
+
+    // 显示房车储存区域
+    rvStorageDiv.classList.toggle('active', gameState.hasRV);
+}
+
+// 修改作弊系统
+function toggleCheatInput() {
+    document.getElementById('cheatInputModal').style.display = 'block';
+    document.getElementById('cheatInput').value = '';
+    document.getElementById('cheatInput').focus();
+}
+
+function closeCheatInput() {
+    document.getElementById('cheatInputModal').style.display = 'none';
+}
+
+function submitCheat() {
+    const cheatInput = document.getElementById('cheatInput').value.toLowerCase();
+    
+    // 检查作弊码
+    if (cheatInput === 'money') {
+        gameState.money += 2000;
+        addEventLog('【开发者模式】获得2000元');
+        updateUI();
+    }
+    
+    closeCheatInput();
+}
+
+// 点击模态窗口外部关闭
+document.getElementById('cheatInputModal').addEventListener('click', function(event) {
+    if (event.target === this) {
+        closeCheatInput();
+    }
+});
+
+// 保持原有的键盘作弊功能
+let cheatCode = '';
+let cheatTimeout;
+
+document.addEventListener('keydown', function(event) {
+    // 记录按键
+    cheatCode += event.key;
+    
+    // 检查作弊码 (money)
+    if (cheatCode.toLowerCase().includes('money')) {
+        gameState.money += 2000;
+        addEventLog('【开发者模式】获得2000元');
+        updateUI();
+        cheatCode = '';
+    }
+    
+    // 5秒后重置作弊码
+    clearTimeout(cheatTimeout);
+    cheatTimeout = setTimeout(() => {
+        cheatCode = '';
+    }, 5000);
+});
 
 initGame();
